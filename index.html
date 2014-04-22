@@ -1,0 +1,63 @@
+<!-- Sample Child Frame -->
+<iframe src="iframe-child.html" width="100%" height="200"></iframe>
+ 
+<!-- Place this script afterword -->
+<script>
+(function () {
+  var confirmMessage = '';
+  var hasUnload = false;
+ 
+  on(window, 'message', onMessage);
+ 
+  function onMessage (event) {
+    var message = event.data || '';
+    var parts = message.split('::::');
+    if (parts.length !== 2 || parts[0] !== 'SetCloseConfirmEvent') {
+      return;
+    }
+    confirmMessage = parts[1];
+    if (confirmMessage && !hasUnload) {
+      window.onbeforeunload = onUnload;
+      hasUnload = true;
+    }
+    if (!confirmMessage && hasUnload) {
+      window.onbeforeunload = null;
+      hasUnload = false;
+    }
+  }
+ 
+  function onUnload (event) {
+    if (event.returnVal) {
+      event.returnVal = confirmMessage;
+    }
+    return confirmMessage;
+  }
+ 
+  /**
+   * Utitily. Cross-browser addEventListener
+   * @param {DOMElement} el - the element to listen to
+   * @param {string} ev - event name
+   * @param {function} fn - the listener
+   */
+  function on (el, ev, fn) {
+    if (el.addEventListener) {
+      el.addEventListener(ev, fn, false);
+      return true;
+    }
+    else if (el.attachEvent) {
+      return el.attachEvent('on' + ev, fn);
+    }
+  }
+ 
+  // http://www.opera.com/support/kb/view/827/
+  try {
+    opera.setOverrideHistoryNavigationMode('compatible');
+    history.navigationMode = 'compatible';
+  }
+  catch(e){}
+ 
+  // Testing purposes
+  window.SetCloseConfirmEvent = onMessage;
+}());
+ 
+</script>
